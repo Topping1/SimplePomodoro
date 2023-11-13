@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Timer</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    margin-top: 50px;
+  }
+  .timer {
+    font-size: 96px;
+    margin-bottom: 20px;
+  }
+  input {
+    margin: 5px;
+    padding: 10px;
+    border: none;
+    background-color: #555;
+    color: white;
+  }
+  button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    background-color: #555;
+    color: white;
+    cursor: pointer;
+  }
+  button:focus {
+    outline: none;
+  }
+  button:active {
+    background-color: #666;
+  }
+</style>
+</head>
+<body>
+
+<div class="timer" id="timer">25:00</div>
+
+<label for="pomodoro">Pomodoro (minutes):</label>
+<input type="number" id="Pomodoro" value="25"><br>
+
+<label for="shortBreak">Short Break (minutes):</label>
+<input type="number" id="shortBreak" value="5"><br>
+
+<label for="longBreak">Long Break (minutes):</label>
+<input type="number" id="longBreak" value="15"><br>
+
+<button id="startStop">Start/Pause</button>
+<button id="forward">Forward</button>
+
+<audio id="audioAlert" src="alarm.mp3" preload="auto"></audio>
+
+<script>
+// Define variables to hold time values
+let seconds = 0;
+let minutes = 25;
+let running = false;
+let interval = null;
+let currentSession = 'Pomodoro';
+let sessionOrder = ['Pomodoro', 'shortBreak', 'Pomodoro', 'shortBreak', 'Pomodoro', 'shortBreak', 'Pomodoro', 'longBreak']; // This array defines the order of the sessions and starts at the beginning once it reaches the end
+let sessionIndex = 0;
+
+// Update the timer display
+function updateTimerDisplay(minutes, seconds) {
+  let secondsString = seconds < 10 ? '0' + seconds : seconds;
+  let minutesString = minutes < 10 ? '0' + minutes : minutes;
+  document.getElementById('timer').textContent = minutesString + ':' + secondsString;
+}
+
+// Play the audio alert
+function playAudioAlert() {
+  const audio = document.getElementById('audioAlert');
+  audio.play();
+}
+
+// Start/Pause the timer
+function startStopTimer() {
+  if (!running) {
+    running = true;
+    // If the current timer was at 0, move to the next session first
+    if (minutes === 0 && seconds === 0) {
+      moveToNextSession();
+    }
+    interval = setInterval(timerLogic, 1000);
+  } else {
+    running = false;
+    clearInterval(interval);
+  }
+}
+
+// Prepare the timer for the next session without starting it
+function prepareNextSession() {
+  sessionIndex = (sessionIndex + 1) % sessionOrder.length;
+  currentSession = sessionOrder[sessionIndex];
+  minutes = parseInt(document.getElementById(currentSession).value);
+  seconds = 0;
+  updateTimerDisplay(minutes, seconds);
+}
+
+// Move to next session and start the timer
+function moveToNextSession() {
+  prepareNextSession();
+  startStopTimer();
+}
+
+// The logic for countdown
+function timerLogic() {
+  if (seconds === 0) {
+    if (minutes === 0) {
+      clearInterval(interval);
+      playAudioAlert();
+      running = false; // Stop the timer
+      prepareNextSession(); // Prepare the next timer session
+    } else {
+      minutes--;
+      seconds = 59;
+    }
+  } else {
+    seconds--;
+  }
+  updateTimerDisplay(minutes, seconds);
+}
+
+// Event listeners
+document.getElementById('startStop').addEventListener('click', startStopTimer);
+document.getElementById('forward').addEventListener('click', function() {
+  clearInterval(interval);
+  running = false;
+  prepareNextSession();
+});
+
+// Initialize display
+updateTimerDisplay(minutes, seconds);
+</script>
+
+</body>
+</html>
